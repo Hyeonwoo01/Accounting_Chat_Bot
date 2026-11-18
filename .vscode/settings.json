@@ -1,0 +1,27 @@
+{
+  // .env 를 디버그/테스트 실행 시 환경 변수로 읽는다 (키 값은 .env 에만 둔다)
+  "python.envFile": "${workspaceFolder}/.env",
+  "python.terminal.activateEnvironment": true,
+
+  // 테스트 탐색기: pytest (설정은 pytest.ini)
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestArgs": ["tests"],
+
+  // scripts/ 의 `import _bootstrap` 를 Pylance 가 찾도록
+  "python.analysis.extraPaths": ["scripts"],
+
+  "files.encoding": "utf8",
+  "files.insertFinalNewline": true,
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.pytest_cache": true
+  },
+  // 대용량 원본·DB 는 검색·감시 대상에서 제외
+  "search.exclude": {
+    "data/**": true
+  },
+  "files.watcherExclude": {
+    "**/data/**": true
+  }
+}

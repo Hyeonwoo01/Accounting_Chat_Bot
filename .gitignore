@@ -1,0 +1,44 @@
+# ===== Secrets (절대 커밋 금지) =====
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# ===== Data (원본·DB·벡터DB는 저장소에 올리지 않음) =====
+data/raw/**
+data/processed/**
+data/database/**
+data/vectordb/**
+!data/raw/
+!data/raw/news/
+!data/raw/dart/
+!data/**/.gitkeep
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# ===== Streamlit =====
+.streamlit/secrets.toml
+
+# ===== OS / IDE =====
+.DS_Store
+Thumbs.db
+.idea/
+# 팀 공용 VS Code 설정만 공유하고 개인 설정은 무시
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# 뉴스 원문(제목·요약)이 들어간 검수표 — 팀 결정상 뉴스 원문·파생 데이터는 로컬에만 둔다 (gate_decision.md)
+evaluation/news_review_sample*.csv

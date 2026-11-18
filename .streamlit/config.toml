@@ -1,0 +1,9 @@
+# Dashboard theme (dashboard/theme.py adds fonts, radii and the background arcs).
+# Warm editorial palette: cream canvas, warm ink text, ink-black primary.
+# Read when Streamlit is started from the project root: streamlit run dashboard/app.py
+[theme]
+base = "light"
+primaryColor = "#141413"
+backgroundColor = "#F3F0EE"
+secondaryBackgroundColor = "#FCFBFA"
+textColor = "#141413"

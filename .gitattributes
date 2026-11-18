@@ -1,0 +1,7 @@
+# Windows/macOS 혼용 팀: 저장소에는 LF 로 저장하고 체크아웃 시 OS 에 맞게 변환
+* text=auto
+*.py text eol=lf
+*.sh text eol=lf
+*.md text
+*.yaml text
+*.json text

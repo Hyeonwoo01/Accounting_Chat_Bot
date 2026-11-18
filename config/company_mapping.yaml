@@ -1,0 +1,82 @@
+# 브랜드 ↔ 한국 회원 법인 ↔ DART corp_code 매핑 (가이드 2-4)
+#
+# aliases       : 단독으로 등장해도 해당 기업으로 식별하는 별칭
+# weak_aliases  : 다른 회사명과 겹칠 수 있는 짧은 별칭. 같은 문서에 context_words 중 하나가 있을 때만 식별
+# search_aliases: 뉴스 검색어 분할(키워드 × 기업)에 쓰는 별칭. 한국 법인명 2개 (팀 확정: 주제당 8개 검색어)
+# member_firms  : 국가별 회원 법인 (가이드 4-2). company_id 는 글로벌 브랜드, member_firm_id 는 한국 법인.
+#                 aliases 가 기사에 직접 나와야 member_firm 으로 본다. 브랜드명만으로는 한국 법인으로 연결하지 않는다.
+# kr_entities   : corp_code 는 scripts/find_corp_codes.py 결과를 사람이 확인한 뒤 채우고 verified: true 로 바꾼다
+#                 verified: false 인 법인은 수집 대상에서 제외된다.
+#                 corp_code 는 앞자리 0이 사라지지 않도록 반드시 따옴표로 감싼다 (예: "00123456").
+
+# weak_aliases 자체는 문맥어로 쓰지 않는다 (예: "EY"가 스스로를 문맥으로 인정하는 문제)
+context_words: ["회계법인", "회계", "감사", "세무", "컨설팅", "PwC", "KPMG", "Deloitte", "딜로이트"]
+
+companies:
+  - company_id: pwc
+    display_name: PwC
+    aliases: ["PwC", "삼일PwC", "삼일회계법인"]
+    weak_aliases: ["삼일"]
+    search_aliases: ["삼일PwC", "삼일회계법인"]
+    member_firms:
+      - member_firm_id: pwc_korea
+        display_name: 삼일PwC
+        legal_name: 삼일회계법인
+        country: KR
+        aliases: ["삼일PwC", "삼일 PwC", "삼일회계법인"]
+        verification_status: verified_dart_corp_name   # 법인명 = kr_entities corp_code 확인값
+    kr_entities:
+      - name: 삼일회계법인
+        corp_code: "00260295"   # corpCode.xml 단일 후보, 법인명 정확히 일치 (2026-11-13 확인)
+        verified: true
+
+  - company_id: deloitte
+    display_name: Deloitte
+    aliases: ["Deloitte", "딜로이트", "안진회계법인", "딜로이트안진"]
+    weak_aliases: ["안진"]
+    search_aliases: ["딜로이트안진", "안진회계법인"]
+    member_firms:
+      - member_firm_id: deloitte_korea
+        display_name: 딜로이트안진
+        legal_name: 안진회계법인
+        country: KR
+        aliases: ["딜로이트안진", "딜로이트 안진", "안진회계법인"]
+        verification_status: verified_dart_corp_name   # 법인명 = kr_entities corp_code 확인값
+    kr_entities:
+      - name: 안진회계법인
+        corp_code: "00260082"   # corpCode.xml 단일 후보, 법인명 정확히 일치 (2026-11-13 확인)
+        verified: true
+
+  - company_id: ey
+    display_name: EY
+    aliases: ["EY한영", "한영회계법인", "언스트앤영", "Ernst & Young"]
+    weak_aliases: ["EY", "한영"]
+    search_aliases: ["EY한영", "한영회계법인"]
+    member_firms:
+      - member_firm_id: ey_korea
+        display_name: EY한영
+        legal_name: 한영회계법인
+        country: KR
+        aliases: ["EY한영", "EY 한영", "한영회계법인"]
+        verification_status: verified_dart_corp_name   # 법인명 = kr_entities corp_code 확인값
+    kr_entities:
+      - name: 한영회계법인
+        corp_code: "00260198"   # corpCode.xml 단일 후보, 법인명 정확히 일치 (2026-11-13 확인)
+        verified: true
+
+  - company_id: kpmg
+    display_name: KPMG
+    aliases: ["KPMG", "삼정KPMG", "삼정회계법인"]
+    weak_aliases: ["삼정"]
+    search_aliases: ["삼정KPMG", "삼정회계법인"]
+    member_firms:
+      - member_firm_id: kpmg_korea
+        display_name: 삼정KPMG
+        legal_name: 삼정회계법인
+        country: KR
+        aliases: ["삼정KPMG", "삼정 KPMG", "삼정회계법인"]
+        verification_status: verified_dart_corp_name   # 법인명 = kr_entities corp_code 확인값
+    kr_entities:
+      - name: 삼정회계법인
+        corp_code: "00260116"   # corpCode.xml 단일 후보, 법인명 정확히 일치 (2026-11-13 확인)
+        verified: true

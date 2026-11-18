@@ -1,0 +1,201 @@
+# 프로젝트 공통 설정. 비밀값은 여기 두지 않는다 (.env 사용).
+
+# 뉴스와 공시는 반드시 같은 기간으로 맞춘다 (가이드 1-2, 2-3).
+period:
+  start: "2023-11-01"
+  end: "2026-10-31"
+
+models:
+  # 팀 선택(2026-11-16): GPT-6 Luna. API 모델 ID는 models.list()로 확인한 값으로 맞춘다. .env LLM_MODEL 로 덮어쓸 수 있음
+  llm: "gpt-6-luna"
+  # Day 5 선택(2026-11-16): 한국어 공시 검색 품질 우선. 바꾸면 벡터DB를 지우고 다시 만들어야 한다
+  # (data/vectordb/embedding_model.txt로 검사). .env EMBEDDING_MODEL 로 덮어쓸 수 있음
+  embedding: "text-embedding-3-large"
+
+paths:
+  database: "data/database/industry.db"
+  vectordb: "data/vectordb"
+
+# Day 5 공시 Q&A (src/rag, scripts/build_vector_store.py, scripts/evaluate_rag.py)
+rag:
+  chunk_size: 900          # 글자 수. '## 절 제목' 단위로 나눈 뒤 긴 절만 겹치게 자른다
+  chunk_overlap: 150
+  # 이보다 짧은 절은 다음 절과 합친다. 표지·한 줄짜리 절(법인명뿐)이 법인명을 담은 질문의 검색 상위를
+  # 차지했다 (2026-11-16 --show Q01·Q02). 모든 청크 앞에는 "[제출 법인·공시명 | 절 제목]"
+  # (감사보고서는 "[고객사 공시명 (감사인 …) | 절]")을 붙여 표만 있는 청크도 무엇에 관한 것인지 남긴다.
+  min_section_chars: 200
+  # 감사보고서의 표준 문단(감사인·경영진의 책임 등)은 모든 보고서에 같은 문장으로 들어가 검색을 독차지한다
+  # (2026-11-16 --show Q06: 상위 5개가 모두 같은 '계속기업' 언급 표준 문단). 이 수 이상의 감사보고서에
+  # 똑같이 나오는 문장(글자·숫자 기준 길이 min_chars 이상)은 청크 전에 뺀다. 자체 공시에는 적용하지 않는다.
+  boilerplate_min_docs: 10
+  boilerplate_min_chars: 30
+  k: 8                     # 질문당 검색 청크 수. 법인별 연도마다 비슷한 공시가 있어 5개면 중복이 자리를 차지했다
+  # 최고 유사도(1 - 코사인 거리)가 이 값보다 낮으면 LLM을 부르지 않고 거절한다.
+  min_relevance: 0.50
+  # 근거 (evaluate_rag.py가 리포트에 그대로 옮긴다). 바꾸면 날짜·수치와 함께 고친다.
+  min_relevance_basis: >-
+    [2026-11-17 재측정: 절 경로·rag-v4 적용 인덱스에서 답변 가능 0.627~0.728, 근거 없음 0.447~0.513 — 0.50 유지]
+    2026-11-16 --retrieval-only (text-embedding-3-large, k=8, 표준 문단 제거·짧은 절 병합·청크 문맥 줄 적용 인덱스,
+    평가 질문 11개): 답변 가능 8개의 최고 유사도 0.627~0.724 (중앙값 0.690), 근거 없음 3개 0.441~0.529 (중앙값 0.522).
+    0.50을 유지한다. 유사도 기준의 역할은 명백히 무관한 질문을 LLM 호출 없이 거르는 것이고, 근거 유무의 주 판정은
+    2차 방어선(모델 거절 + 인용 문자열 대조)이 맡는다. 기준을 올리면 이 11개는 모두 1차에서 갈리지만
+    같은 질문에 맞춘 값이 되고 새 질문의 잘못된 거절이 늘어난다. 근거 없는 질문 중 0.50 이상(2개)으로 2차 방어선을 평가한다.
+    한계: 청크마다 법인명이 든 문맥 줄이 붙어 법인명을 언급한 질문은 무관해도 유사도가 0.5 안팎까지 오른다.
+  # 검색 방식 (심화, 2026-11-18). vector = 임베딩 검색만 | hybrid = + BM25 키워드(글자 2-gram), RRF 결합
+  # | hybrid_rerank = hybrid 후보를 LLM이 다시 정렬 (질문당 호출 1회 추가). 1차 거절은 모든 방식에서 벡터 유사도로 판정.
+  # 바꿀 때는 scripts/evaluate_rag.py --mode 로 같은 질문을 비교하고 결과를 evaluation_report.md에 적는다.
+  retrieval:
+    mode: hybrid_rerank    # 2026-11-18 비교(evaluation/rag_search_comparison.md): holdout 4/4 (vector 3/4, hybrid 2/4), base 동일
+    candidates: 20         # 하이브리드에서 벡터·키워드 각각 가져오는 후보 수 (리랭킹 대상도 이 수)
+    rrf_k: 60              # RRF 상수 (일반적으로 쓰는 값)
+  chars_per_token: 1.3     # 임베딩 비용 대략 추정용 (토크나이저 미사용)
+  # 임베딩 1백만 토큰당 가격(USD). 가격표로 확인한 값만 적는다. null이면 비용 추정을 생략한다.
+  # text-embedding-3-large $0.13 (small $0.02). 가격 집계 사이트 기준 2026-11-16 — OpenAI 가격표로 재확인할 것
+  embedding_price_per_1m: 0.13
+
+dart:
+  request_delay_sec: 0.5   # 요청 간 딜레이
+  page_count: 100          # list.json 최대값
+  max_retries: 3
+  pblntf_types: []         # 비우면 전체 유형. 예: ["A", "B", "F", "I"]
+
+news:
+  # ⛔ 사용 중단 (프로젝트 종료 후): NAVER API 서비스 이용약관(2026-10-07) 검색 API 특약 2.1~2.3, 일반조건 7.3③에
+  #   따라 검색 결과를 저장·가공·집계하거나 AI에 입력할 수 없다 (evaluation/gate_decision.md).
+  #   수집·적재 스크립트는 이 값이 false면 뉴스를 건너뛴다. 대체 출처가 정해지기 전까지 true로 바꾸지 않는다.
+  enabled: false
+  # NAVER API HUB(네이버 클라우드) 뉴스 검색. 개발자센터(openapi.naver.com)는 신규 발급 종료.
+  # 주소는 검색으로 확인한 값이다 — NCP 공식 문서(NAVER API HUB > 검색 > 뉴스)와 다르면 여기만 고친다.
+  api_url: "https://naverapihub.apigw.ntruss.com/search/v1/news"
+  request_delay_sec: 0.2
+  display: 100             # 네이버 검색 API 최대값
+  max_start: 1000          # 네이버 검색 API 최대값 (공식 문서로 재확인)
+  max_retries: 3
+  # 기본 키워드("회계법인 규제" 등)는 기사가 수만 건이라 1,000건 한도로 몇 주치만 닿고 무관 기사가 많다
+  # (evaluation/news_gate_report.md 1차 결과) → 끄고, "<기업 별칭> <세부 주제>" 검색어만 쓴다.
+  include_base_query: false
+  split_by_company: true
+  # keyword: documents.search_keyword로 저장되는 묶음 이름 / topics: 별칭 뒤에 붙는 세부 주제
+  # 주제 선택 규칙: 8개 검색어(4개 법인 × 별칭 2개)가 모두 기간 시작까지 닿는 주제만 사용한다
+  # (법인 간 비교의 공정성). evaluation/news_gate_report.md 3차 확인(2026-11-13)으로 확정한 14개 주제.
+  # 탈락: 규제·AI·컨설팅·매출·파트너·플랫폼(일반어, 실적 기사의 감사인 언급 잡음),
+  #       ESG·M&A 자문·디지털 전환·보안(삼정KPMG에서 잘림), 컨설팅 부문(삼정KPMG 2023-11-02까지만 도달).
+  keywords:
+    - keyword: "회계법인 규제"
+      category: regulation_policy
+      topics: ["감리", "제재", "징계", "지정감사"]
+    - keyword: "회계법인 AI"
+      category: technology_trend
+      topics: ["생성형", "AI 감사", "디지털 감사"]
+    - keyword: "컨설팅 트렌드"
+      category: technology_trend
+      topics: ["ESG 인증", "딜 자문"]
+    - keyword: "회계법인 경쟁"
+      category: market_competition
+      topics: ["수임", "채용", "신임 대표"]
+    - keyword: "회계법인 인프라"
+      category: supply_chain_infrastructure
+      topics: ["클라우드", "정보보호"]
+
+categories:
+  regulation_policy: "규제 및 정책"
+  technology_trend: "기술 및 트렌드"
+  market_competition: "시장 및 경쟁"
+  supply_chain_infrastructure: "공급망 및 인프라"
+
+# 게이트 2 "충분한 공시" 기준 — 조회 전에 팀이 합의해 확정한다 (가이드 0-3).
+# 결과를 본 뒤 이 값을 바꾸지 않는다. 바꿨다면 사유를 리포트에 기록한다.
+# 확정: 2026-11-13, 조회 전 (가이드 초기 제안값 + 공시 종류 기준 추가)
+gate2_criteria:
+  # RAG 평가 질문 10개 중 7~8개에 서로 다른 근거 공시를 대고, 법인별 목록이 비지 않을 최소량(법인당 7~8건).
+  # 추세 분석 충분량이 아니라 Q&A·법인 비교 시연 가능 하한이다.
+  min_extractable_docs: 30
+  # 3년(36개월) 중 공시가 있는 월 수. 특정 시점 쏠림을 걸러낸다.
+  min_distinct_months: 6
+  # 공시가 있는 연도 수. 6개월이 한 해에 연속으로 몰린 경우를 걸러 3년 흐름을 볼 수 있게 한다.
+  min_distinct_years: 2
+  # 4개 법인 중 텍스트 추출 가능한 공시가 있는 법인 수. 비교 화면의 최소 조건.
+  min_companies_with_docs: 3
+  # 정정 표시·대상 기간을 뗀 공시명 종류 수. 매년 같은 보고서만 반복되면 질문할 거리가 없으므로 추가.
+  min_distinct_report_types: 3
+
+# 분기 B-1 검증: Big4 이름이 나오는 시장 전체 공시 (scripts/verify_dart_market.py)
+dart_market:
+  # 표본 조회 창. corp_code 없는 list.json은 조회 기간이 약 3개월로 제한된다 (공식 문서로 확인).
+  # 감사보고서 제출이 몰리는 3~5월(성수기)과 그 외 기간(비수기)을 하나씩 본다.
+  sample_windows:
+    - ["2026-03-01", "2026-05-31"]
+    - ["2026-07-01", "2026-09-30"]
+  max_pages_per_type: 30          # 유형·창마다 훑을 최대 페이지 (100건/페이지)
+  filer_types: ["F"]              # 외부감사관련: 회계법인이 제출인(flr_nm)인 감사보고서
+  keyword_types: ["I", "B", "E"]  # 거래소·주요사항·기타공시에서 공시명 키워드 검색
+  report_keywords: ["감사인"]       # 외부감사인 선임·변경·지정 등
+  sample_documents: 6             # 원문을 받아 Big4 언급을 확인할 표본 수
+  daily_call_limit: 20000         # DART 일일 호출 한도 (공식 문서로 확인)
+  # 감사보고서 원문 표본 (gate_decision.md "원문 범위"). RAG·감사의견 Q&A용.
+  originals:
+    month: "2026-03"              # 가장 최근 사업연도(2025.12 결산) 제출월
+    # 비우면 전체. F 목록은 회계법인이 제출한 비상장 외감 대상이 대부분이다 —
+    # 상장사(["Y","K"])로 제한하면 법인당 3건뿐이었다 (1차 실행).
+    corp_cls: []
+    exclude_corrections: true     # [기재정정] 제외: 같은 달에 제출된 옛 사업연도 정정본이 섞임
+    per_firm: 30                  # 법인당 고객사 수 (총 120)
+    seed: 42
+
+# 이슈 급증 탐지 (가이드 5-3)
+spike_detection:
+  baseline_weeks: 8
+  sigma: 2.0
+
+# Day 4 LLM 분류 (scripts/run_llm_classification.py). 실행 전 비용 추정을 먼저 본다.
+llm_classification:
+  # null = 파라미터를 보내지 않음(모델 기본값). gpt-6-luna는 temperature 0을 거부한다 (기본값 1만 허용, 2026-11-16 확인)
+  #   → 같은 기사도 실행마다 결과가 조금 다를 수 있다. 재현성 한계로 리포트에 적는다.
+  temperature: null
+  stop_after_consecutive_api_errors: 5   # 같은 원인의 API 오류가 연속되면 나머지 요청을 보내지 않고 멈춘다
+  parse_retries: 1                 # 형식 오류 시 재시도 횟수 (가이드 6-2: 1회)
+  chars_per_token: 1.3             # 한국어 토큰 수 대략 추정용 (토크나이저 미사용, 오차 큼)
+  expected_output_tokens: 90       # 기사당 출력 토큰 추정
+  # 1백만 토큰당 가격(USD). GPT-6 Luna 표준 처리 요금 (openai.com API 가격표, 2026-11-16 확인, 컨텍스트 272K 미만)
+  price_per_1m_input: 0.10
+  price_per_1m_output: 0.50
+
+# Day 7 결론 초안 (scripts/draft_insights.py → 두 사람 검수 → scripts/load_insights.py, 가이드 8).
+# 가격·토큰 추정은 llm_classification 값을 같이 쓴다.
+insights:
+  months: [1, 10]                  # 연도 비교는 매년 같은 달(1~10월)끼리 — 마지막 해가 10월까지라서
+  min_articles_for_sentiment: 20   # 법인·연도별 단일 법인 기사가 이보다 적으면 감성 사실을 만들지 않는다
+  evidence_per_category: 1         # 카테고리 사실의 근거: 카테고리마다 가장 큰 사건 1건
+  evidence_per_spike: 3            # 급증 사실의 근거: 그 주의 큰 사건 3건
+  temperature: null                # gpt-6-luna는 기본값만 허용 (llm_classification 참고)
+  parse_retries: 1
+  timeout_sec: 180
+  expected_output_tokens: 1500
+
+# 심화: 기간(분기)별 이슈 요약 (scripts/draft_issue_summaries.py → 두 사람 검수 → scripts/load_issue_summaries.py).
+# 가격·토큰 추정은 llm_classification 값을 같이 쓴다.
+issue_summary:
+  top_events: 8                    # 분기마다 LLM에 주는 사건 수 (유사 기사 그룹, 기사 수 순)
+  min_articles: 10                 # 분류된 관련 기사가 이보다 적은 분기는 요약하지 않는다
+  temperature: null
+  parse_retries: 1
+  timeout_sec: 120
+  expected_output_tokens: 300
+
+# Day 6 대시보드 (dashboard/). 화면 문구의 수치는 evaluation/evaluation_report.md와 같은 실측값만 쓴다 — 바꾸면 둘 다 고친다.
+dashboard:
+  llm_prompt_version: "v1"         # analysis_results 중 화면에 쓸 분류 결과 버전
+  validation:
+    sentiment_accuracy: "0.75~0.80"
+    category_accuracy: "0.69~0.80"
+    basis: "표본 100건을 검수자 2명이 각자 라벨링, 각 검수자 기준 LLM 정확도의 범위(모집단 가중 추정). 불일치 73건 합의 생략"
+    reviewer_agreement: "감성 0.685(κ 0.52), 카테고리 0.607(κ 0.46)"
+    summary_factual: "0.897 (n=97)"
+    scope: "정제 기사 2,581건 중 유사 기사 그룹 대표 1,742건을 제목+요약으로 분류하고 결과를 같은 그룹 기사에 복사 (gpt-6-luna, prompt v1)"
+  # 04 QA 예시 질문 버튼. 평가 질문과 겹치지 않게 둔다 (평가 수치를 화면 시연으로 부풀리지 않도록).
+  example_questions:
+    - {question: "삼정회계법인 사업보고서의 사업부문별 인원은 어떻게 되는가?", company_id: "kpmg", filing_role: "own"}
+    - {question: "안진회계법인 사업보고서에 기재된 외감법에 의한 감사실적은?", company_id: "deloitte", filing_role: "own"}
+    - {question: "한영회계법인이 감사한 회사 중 강조사항이 기재된 감사보고서가 있는가?", company_id: "ey", filing_role: "audit_client"}
+    - {question: "삼일PwC의 내년 신규 채용 계획은?", company_id: "pwc", filing_role: null}
+

@@ -1,0 +1,20 @@
+python-dotenv>=1.0
+pyyaml>=6.0
+requests>=2.31
+pandas>=2.1
+openai>=1.40
+
+# dev
+pytest>=8.0
+
+# rag (Day 5): 벡터DB·임베딩
+# chromadb는 onnxruntime이 필요하다. Python 3.15에서는 onnxruntime 설치 파일이 없어 설치 실패 (2026-11-16 확인)
+# → 가상환경은 Python 3.11~3.13으로 만든다.
+chromadb>=1.0
+langchain-core>=1.0
+langchain-chroma>=1.0
+langchain-openai>=1.0
+
+# dashboard (Day 6)
+streamlit>=1.50   # width="stretch" (use_container_width는 제거 예정)
+plotly>=5.20
