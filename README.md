@@ -39,6 +39,16 @@ PwC · Deloitte · EY · KPMG(및 한국 회원 법인)의 뉴스와 DART 공시
 | Big4 Comparison | 법인별 기사량·카테고리·감성, 감사보고서 제출 건수, 자체 공시·고객사 감사보고서 목록 |
 | QA | 공시 근거 질의응답. 답변마다 근거 공시(공시명·제출일·접수번호·링크·원문 구절)를 보여 주고, 근거가 없으면 거절 |
 
+### 화면 예시
+
+| App (결론·데이터 규모) | QA (공시 근거 질의응답) |
+|---|---|
+| ![App 첫 화면](docs/images/app_home.png) | ![QA 화면](docs/images/qa.png) |
+| **Industry Overview (공시 추이)** | **Big4 Comparison (감사보고서 제출 건수)** |
+| ![Industry Overview 공시 추이](docs/images/industry_overview_filings.png) | ![Big4 Comparison 감사보고서 제출 건수](docs/images/big4_comparison_audit_reports.png) |
+
+로컬 실행 화면(2026-11-19). 뉴스 기사 목록·대표 기사 화면은 네이버 검색 API 약관 때문에 싣지 않았다.
+
 ### 팀
 
 | 담당 | 맡은 일 |
