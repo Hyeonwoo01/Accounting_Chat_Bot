@@ -106,8 +106,8 @@ src/collectors ──▶ data/raw ──▶ src/preprocessing ──▶ SQLite(d
 
 - [ ] 각 PC에서 `data/raw/news/` 원본과 DB의 뉴스 행(`source_type='news'`) 삭제, 뉴스 기반 산출물(분류 결과·임베딩·캐시) 삭제
 - [x] 뉴스 수집 비활성화: 설정 플래그 + 수집·적재 스크립트 차단 (이 저장소에 적용됨: `news.enabled: false`)
-- [x] 저장소의 뉴스 파생 기록 정리: 이 공개 저장소는 이력 없이 새로 만들었고 `news_gate_report.md`·`spike_summary.md` 등은 제외 (README "데이터 출처와 제약")
-      (git 이력에 남으므로 공개 전에 판단 — 필요하면 공개용 저장소를 새로 만든다)
+- [x] 저장소의 뉴스 파생 기록 정리: 이 공개 저장소는 이력 없이 새로 만들었고 `news_gate_report.md`·`spike_summary.md` 등은 제외 (README "데이터 출처와 제약").
+      작업 이력이 있는 원래 저장소는 비공개로 유지한다 (README "협업 기록과 비공개 저장소")
 - [ ] 리포트·대시보드·발표 자료에 네이버 뉴스 원문이나 그 분석 결과가 남아 있지 않은지 확인, README에 데이터 출처·제약 명시
 - [ ] 저장소를 public으로 바꾸기 전에 `.env`·키·개인 이메일이 이력에 없는지 다시 확인
 
