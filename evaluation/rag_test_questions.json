@@ -194,9 +194,10 @@
       },
       "question": "삼일회계법인 사업보고서 기준 수습 공인회계사는 몇 명인가?",
       "type": "수치",
-      "answerable_checked": false,
+      "answerable_checked": true,
       "expected_rcept_no": "",
-      "expected_answer": ""
+      "expected_answer": "234명 (2026.06 사업보고서, 인력 총괄표 수습 합계)",
+      "check_note": "감사투입 표의 '수습 공인회계사 214'는 감사 투입 인원이라 다른 값. 2025.06(260)·2024.06(249)도 함께 검색됨"
     },
     {
       "id": "H08",
@@ -208,9 +209,9 @@
       },
       "question": "한영회계법인이 손해배상 책임에 대비해 적립한 준비금 또는 공동기금은 얼마인가?",
       "type": "표현 변경",
-      "answerable_checked": false,
+      "answerable_checked": true,
       "expected_rcept_no": "",
-      "expected_answer": ""
+      "expected_answer": "2026.06 기말: 손해배상준비금 48,326백만원, 손해배상공동기금 1,094백만원 (계 49,420백만원)"
     },
     {
       "id": "H09",
@@ -222,9 +223,10 @@
       },
       "question": "안진회계법인의 가장 최근 사업보고서 기준 매출액 총액은 얼마인가?",
       "type": "최신 공시 선택",
-      "answerable_checked": false,
+      "answerable_checked": true,
       "expected_rcept_no": "",
-      "expected_answer": ""
+      "expected_answer": "",
+      "check_note": "최신은 2026.05 사업보고서(2026-08-31 제출). 사업부문별 매출액 합계는 미리보기에서 잘려 DART 원문으로 판정"
     },
     {
       "id": "H10",
@@ -236,9 +238,10 @@
       },
       "question": "삼정회계법인의 본점 소재지와 분사무소는 어디인가?",
       "type": "수치 아님",
-      "answerable_checked": false,
+      "answerable_checked": true,
       "expected_rcept_no": "",
-      "expected_answer": ""
+      "expected_answer": "주사무소 서울시 강남구 테헤란로 152 강남파이낸스센터 27층, 분사무소 없음 (2026.03 사업보고서)",
+      "check_note": "2023.03 정정본에는 논현로85길 28이 분사무소로 적혀 있어, 예전 공시로 답하면 오답"
     },
     {
       "id": "H11",
@@ -250,9 +253,9 @@
       },
       "question": "삼일회계법인의 공인회계사 수는 2024년 사업보고서와 2026년 사업보고서 사이에 어떻게 달라졌는가?",
       "type": "연도 비교",
-      "answerable_checked": false,
+      "answerable_checked": true,
       "expected_rcept_no": "",
-      "expected_answer": ""
+      "expected_answer": "2,991명(2024.06) → 3,018명(2026.06), 27명 증가 (인력 총괄표 공인회계사 합계)"
     },
     {
       "id": "H12",
@@ -264,9 +267,10 @@
       },
       "question": "삼정회계법인의 경영자문 매출은 직전 사업연도보다 늘었는가 줄었는가?",
       "type": "연도 비교",
-      "answerable_checked": false,
+      "answerable_checked": true,
       "expected_rcept_no": "",
-      "expected_answer": ""
+      "expected_answer": "",
+      "check_note": "손익계산서·사업부문별 매출액 표가 검색됨. 경영자문 금액은 미리보기에서 잘려 원문으로 판정"
     },
     {
       "id": "H13",
@@ -277,9 +281,10 @@
       },
       "question": "삼일회계법인과 삼정회계법인 중 공인회계사 수가 더 많은 곳은 어디인가?",
       "type": "여러 법인",
-      "answerable_checked": false,
+      "answerable_checked": true,
       "expected_rcept_no": "",
-      "expected_answer": ""
+      "expected_answer": "",
+      "check_note": "삼일 3,018명(2026.06)은 검색됨. 삼정 인력 총괄표는 앞부분만 검색돼 여러 법인 질문의 약점을 시험"
     },
     {
       "id": "H14",
@@ -290,9 +295,10 @@
       },
       "question": "한영회계법인과 안진회계법인의 사원(파트너) 수는 각각 몇 명인가?",
       "type": "여러 법인",
-      "answerable_checked": false,
+      "answerable_checked": true,
       "expected_rcept_no": "",
-      "expected_answer": ""
+      "expected_answer": "",
+      "check_note": "근거는 공시에 있으나 --show(2026-11-19)에서 안진 인력 총괄표가 검색되지 않았고 한영은 예전 보고서만 나옴 (Q05와 같은 여러 법인 한계)"
     },
     {
       "id": "H15",
@@ -304,9 +310,10 @@
       },
       "question": "안진회계법인은 직원들이 감사 대상 회사와 이해관계가 없는지 어떻게 점검하는가?",
       "type": "표현 변경",
-      "answerable_checked": false,
+      "answerable_checked": true,
       "expected_rcept_no": "",
-      "expected_answer": ""
+      "expected_answer": "",
+      "check_note": "주식거래 관리 지침·연 2회 모니터링 등. 벡터 최고 유사도 0.52로 거절 기준 0.50에 가까움"
     },
     {
       "id": "H16",
@@ -318,9 +325,10 @@
       },
       "question": "롯데멤버스의 2025년 매출액은 얼마인가?",
       "type": "고객사 재무",
-      "answerable_checked": false,
+      "answerable_checked": true,
       "expected_rcept_no": "",
-      "expected_answer": ""
+      "expected_answer": "",
+      "check_note": "롯데멤버스 손익계산서는 '매출액'이 아니라 '영업수익'으로 적혀 있음(표현 차이). 벡터 최고 유사도 0.51"
     },
     {
       "id": "H17",
@@ -332,9 +340,9 @@
       },
       "question": "한화커넥트 감사보고서의 감사의견과 감사를 맡은 회계법인은 무엇인가?",
       "type": "고객사",
-      "answerable_checked": false,
+      "answerable_checked": true,
       "expected_rcept_no": "",
-      "expected_answer": ""
+      "expected_answer": "적정, 감사인 삼정회계법인"
     },
     {
       "id": "H18",
