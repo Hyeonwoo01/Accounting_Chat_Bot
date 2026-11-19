@@ -71,6 +71,7 @@ PwC · Deloitte · EY · KPMG(및 한국 회원 법인)의 뉴스와 DART 공시
 | Day 6 대시보드 | ✅ 5개 화면 (App · Industry Overview · Issue Analysis · Big4 Comparison · QA) |
 | Day 7 결론 문장 | ✅ LLM 초안 → 두 사람 검수 → 3개 채택 + 해석 결론 1개 추가 (App·Industry Overview 표시) |
 | 심화 | ✅ 공시 QA 검색 고도화(하이브리드 + LLM 리랭킹), 분기별 이슈 자동 요약(13개 분기 검수) |
+| 추가 검증 (공개본) | ✅ 새 질문 15개(holdout2): 정답 10/11, 근거 없는 질문 거절 4/4 (`evaluation/evaluation_report.md` 6-1절) |
 
 ## 데이터 출처와 제약
 
