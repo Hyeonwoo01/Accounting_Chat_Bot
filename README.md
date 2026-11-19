@@ -120,7 +120,7 @@ data/                로컬 전용 (git 미추적)
 
 ```bash
 python -m venv .venv && source .venv/bin/activate   # Windows: python -m venv .venv; .venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+pip install -r requirements-lock.txt   # 결과를 만든 환경의 정확한 버전 (최소 버전만 쓰려면 requirements.txt)
 cp .env.example .env   # Windows: Copy-Item .env.example .env / 키 입력. 절대 커밋하지 않는다
 ```
 
