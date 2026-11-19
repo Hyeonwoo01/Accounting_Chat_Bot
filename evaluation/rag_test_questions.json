@@ -1,5 +1,5 @@
 {
-  "_note": "Day 5 RAG 평가 질문 (가이드 10). answerable=false는 근거 공시가 없어 거절해야 하는 질문. expected_* 는 벡터DB 구축 후 원문을 보고 사람이 채운다 (비어 있으면 정답 판정은 사람이 CSV에서 한다). filters: company_id(pwc|deloitte|ey|kpmg, 제출 법인 기준), filing_role(own=법인 자체 공시 | audit_client=고객사 감사보고서), date_from/date_to(YYYY-MM-DD). 근거 없는 질문에는 filing_role을 주지 않는다 (검색 범위를 좁혀 거절을 쉽게 만들지 않도록). set=holdout(H01~): 2026-11-18 검색 고도화(하이브리드·리랭킹) 뒤 추가한 질문. 검색 설정을 맞추는 데 쓰지 않고, 기존 질문에만 맞춘 개선인지 확인하는 데만 쓴다. 공시 절 제목과 다른 말로 묻는 질문을 일부러 넣었다.",
+  "_note": "Day 5 RAG 평가 질문 (가이드 10). answerable=false는 근거 공시가 없어 거절해야 하는 질문. expected_* 는 벡터DB 구축 후 원문을 보고 사람이 채운다 (비어 있으면 정답 판정은 사람이 CSV에서 한다). filters: company_id(pwc|deloitte|ey|kpmg, 제출 법인 기준), filing_role(own=법인 자체 공시 | audit_client=고객사 감사보고서), date_from/date_to(YYYY-MM-DD). 근거 없는 질문에는 filing_role을 주지 않는다 (검색 범위를 좁혀 거절을 쉽게 만들지 않도록). set=holdout(H01~): 2026-11-18 검색 고도화(하이브리드·리랭킹) 뒤 추가한 질문. 검색 설정을 맞추는 데 쓰지 않고, 기존 질문에만 맞춘 개선인지 확인하는 데만 쓴다. 공시 절 제목과 다른 말로 묻는 질문을 일부러 넣었다. set=holdout2(H07~): 2026-11-19 검색 방식(hybrid_rerank)을 정한 뒤 추가한 질문. 설정 조정에 쓰지 않는다. 유형: 수치·최신 공시 선택, 연도 비교, 여러 법인, 표현 변경, 고객사 재무, 근거 없음(전망·글로벌·뉴스). answerable은 공시 구성으로 예상한 값이라 채점 전에 원문으로 확인한다(answerable_checked).",
   "questions": [
     {
       "id": "Q01",
@@ -183,6 +183,190 @@
       "question": "딜로이트안진 대표가 언론 인터뷰에서 밝힌 AI 전략은 무엇인가?",
       "expected_rcept_no": "",
       "expected_answer": ""
+    },
+    {
+      "id": "H07",
+      "set": "holdout2",
+      "answerable": true,
+      "filters": {
+        "filing_role": "own",
+        "company_id": "pwc"
+      },
+      "question": "삼일회계법인 사업보고서 기준 수습 공인회계사는 몇 명인가?",
+      "type": "수치",
+      "answerable_checked": false,
+      "expected_rcept_no": "",
+      "expected_answer": ""
+    },
+    {
+      "id": "H08",
+      "set": "holdout2",
+      "answerable": true,
+      "filters": {
+        "filing_role": "own",
+        "company_id": "ey"
+      },
+      "question": "한영회계법인이 손해배상 책임에 대비해 적립한 준비금 또는 공동기금은 얼마인가?",
+      "type": "표현 변경",
+      "answerable_checked": false,
+      "expected_rcept_no": "",
+      "expected_answer": ""
+    },
+    {
+      "id": "H09",
+      "set": "holdout2",
+      "answerable": true,
+      "filters": {
+        "filing_role": "own",
+        "company_id": "deloitte"
+      },
+      "question": "안진회계법인의 가장 최근 사업보고서 기준 매출액 총액은 얼마인가?",
+      "type": "최신 공시 선택",
+      "answerable_checked": false,
+      "expected_rcept_no": "",
+      "expected_answer": ""
+    },
+    {
+      "id": "H10",
+      "set": "holdout2",
+      "answerable": true,
+      "filters": {
+        "filing_role": "own",
+        "company_id": "kpmg"
+      },
+      "question": "삼정회계법인의 본점 소재지와 분사무소는 어디인가?",
+      "type": "수치 아님",
+      "answerable_checked": false,
+      "expected_rcept_no": "",
+      "expected_answer": ""
+    },
+    {
+      "id": "H11",
+      "set": "holdout2",
+      "answerable": true,
+      "filters": {
+        "filing_role": "own",
+        "company_id": "pwc"
+      },
+      "question": "삼일회계법인의 공인회계사 수는 2024년 사업보고서와 2026년 사업보고서 사이에 어떻게 달라졌는가?",
+      "type": "연도 비교",
+      "answerable_checked": false,
+      "expected_rcept_no": "",
+      "expected_answer": ""
+    },
+    {
+      "id": "H12",
+      "set": "holdout2",
+      "answerable": true,
+      "filters": {
+        "filing_role": "own",
+        "company_id": "kpmg"
+      },
+      "question": "삼정회계법인의 경영자문 매출은 직전 사업연도보다 늘었는가 줄었는가?",
+      "type": "연도 비교",
+      "answerable_checked": false,
+      "expected_rcept_no": "",
+      "expected_answer": ""
+    },
+    {
+      "id": "H13",
+      "set": "holdout2",
+      "answerable": true,
+      "filters": {
+        "filing_role": "own"
+      },
+      "question": "삼일회계법인과 삼정회계법인 중 공인회계사 수가 더 많은 곳은 어디인가?",
+      "type": "여러 법인",
+      "answerable_checked": false,
+      "expected_rcept_no": "",
+      "expected_answer": ""
+    },
+    {
+      "id": "H14",
+      "set": "holdout2",
+      "answerable": true,
+      "filters": {
+        "filing_role": "own"
+      },
+      "question": "한영회계법인과 안진회계법인의 사원(파트너) 수는 각각 몇 명인가?",
+      "type": "여러 법인",
+      "answerable_checked": false,
+      "expected_rcept_no": "",
+      "expected_answer": ""
+    },
+    {
+      "id": "H15",
+      "set": "holdout2",
+      "answerable": true,
+      "filters": {
+        "filing_role": "own",
+        "company_id": "deloitte"
+      },
+      "question": "안진회계법인은 직원들이 감사 대상 회사와 이해관계가 없는지 어떻게 점검하는가?",
+      "type": "표현 변경",
+      "answerable_checked": false,
+      "expected_rcept_no": "",
+      "expected_answer": ""
+    },
+    {
+      "id": "H16",
+      "set": "holdout2",
+      "answerable": true,
+      "filters": {
+        "filing_role": "audit_client",
+        "company_id": "pwc"
+      },
+      "question": "롯데멤버스의 2025년 매출액은 얼마인가?",
+      "type": "고객사 재무",
+      "answerable_checked": false,
+      "expected_rcept_no": "",
+      "expected_answer": ""
+    },
+    {
+      "id": "H17",
+      "set": "holdout2",
+      "answerable": true,
+      "filters": {
+        "filing_role": "audit_client",
+        "company_id": "kpmg"
+      },
+      "question": "한화커넥트 감사보고서의 감사의견과 감사를 맡은 회계법인은 무엇인가?",
+      "type": "고객사",
+      "answerable_checked": false,
+      "expected_rcept_no": "",
+      "expected_answer": ""
+    },
+    {
+      "id": "H18",
+      "set": "holdout2",
+      "answerable": false,
+      "filters": {},
+      "question": "삼일PwC가 2027년에 새로 진출할 해외 시장은 어디인가?",
+      "why_unanswerable": "미래 전망 — 공시에 없는 내용"
+    },
+    {
+      "id": "H19",
+      "set": "holdout2",
+      "answerable": false,
+      "filters": {},
+      "question": "PwC 글로벌 네트워크의 전 세계 파트너 수는 몇 명인가?",
+      "why_unanswerable": "글로벌 브랜드 수치 — 한국 법인 DART 공시에 없음 (원칙 6)"
+    },
+    {
+      "id": "H20",
+      "set": "holdout2",
+      "answerable": false,
+      "filters": {},
+      "question": "삼정KPMG가 최근 업무협약을 맺은 기업은 어디인가?",
+      "why_unanswerable": "뉴스 내용 — 공시 근거 아님 (원칙 5)"
+    },
+    {
+      "id": "H21",
+      "set": "holdout2",
+      "answerable": false,
+      "filters": {},
+      "question": "롯데멤버스의 2027년 예상 매출은 얼마인가?",
+      "why_unanswerable": "미래 전망 — 감사보고서는 과거 재무 정보"
     }
   ]
 }

@@ -126,6 +126,11 @@ def test_compare_writes_per_mode_and_per_set_table(tmp_path, monkeypatch):
     text = out.read_text(encoding="utf-8")
     assert "| vector | base | 0/0 | 1/1 | 0/1 |" in text and "| hybrid | base | 0/0 | 1/1 | 1/1 |" in text
     assert "| hybrid | holdout | 1/1 | 0/0 | 0/미판정 |" in text
+    rows3 = rows("1") + [{**base, "id": "H07", "set": "holdout2", "answerable": "1", "refused": "0", "refusal_ok": "1",
+                          "verified_citations": "1", "human_correct": "1"}]
+    ev.save_answers(rows3, tmp_path / "answers_hybrid.csv")
+    ev.compare(out)
+    assert "| hybrid | holdout2 | 0/0 | 1/1 | 1/1 |" in out.read_text(encoding="utf-8")
     assert "| Q04 | 0 | 1 |" in text and "| H05 | 거 | 거 |" in text
     assert ev.paths_for("hybrid")[0].name == "answers_hybrid.csv" and ev.paths_for(None)[0].name == "answers.csv"
 

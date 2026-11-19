@@ -243,10 +243,12 @@ def compare(out: Path = COMPARISON) -> None:
         print("\n".join(f"  {p}" for p in problems))
         raise SystemExit(1)
     lines = ["# 공시 QA 검색 방식 비교", "", f"- 생성: {datetime.now():%Y-%m-%d %H:%M} / `scripts/evaluate_rag.py --compare`",
-             "- base = 기존 평가 질문(검색 설정을 맞출 때 쓴 질문), holdout = 검색 고도화 뒤 새로 추가한 질문", "",
+             "- base = 기존 평가 질문(검색 설정을 맞출 때 쓴 질문), holdout = 검색 고도화 뒤 새로 추가한 질문, "
+             "holdout2 = 검색 방식을 정한 뒤 추가한 질문(수치 비교·여러 법인·최신 공시·표현 변경)", "",
              "| 방식 | 질문 묶음 | 근거 없는 질문 거절 | 답변 가능 질문에 답변 | 사람 판정 정답 |", "|---|---|---|---|---|"]
     for mode, rows in runs.items():
-        for name in ("base", "holdout", "전체"):
+        extra = sorted({r.get("set") or "base" for r in rows} - {"base", "holdout"})
+        for name in ("base", "holdout", *extra, "전체"):
             part = rows if name == "전체" else [r for r in rows if (r.get("set") or "base") == name]
             if not part:
                 continue
