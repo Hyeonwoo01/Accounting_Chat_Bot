@@ -40,7 +40,8 @@ ANSWERS = OUT_DIR / "answers.csv"
 REPORT = PROJECT_ROOT / "evaluation" / "rag_eval_report.md"
 COMPARISON = PROJECT_ROOT / "evaluation" / "rag_search_comparison.md"
 FIELDS = ["id", "set", "answerable", "question", "refused", "refusal_ok", "reason", "top_score", "retrieved",
-          "verified_citations", "audit_client_cited", "answer", "citations", "human_correct", "human_note"]
+          "verified_citations", "audit_client_cited", "unverified_numbers", "answer", "citations",
+          "human_correct", "human_note"]
 
 
 def load_questions(path: Path = QUESTIONS) -> list[dict]:
@@ -66,6 +67,8 @@ def row_for(q: dict, a: Answer) -> dict:
         "reason": a.reason, "top_score": "" if a.top_score is None else round(a.top_score, 4),
         "retrieved": a.retrieved, "verified_citations": len(a.citations),
         "audit_client_cited": int(any(c["filing_role"] == "audit_client" for c in cites)),
+        # numbers in the answer not found in the cited chunks (shown as "확인 필요" on the dashboard)
+        "unverified_numbers": " ".join(a.unverified_numbers),
         # newlines -> " / " so each answer stays on one Excel row
         "answer": " / ".join(x.strip() for x in a.answer.splitlines() if x.strip()),
         "citations": json.dumps(cites, ensure_ascii=False),

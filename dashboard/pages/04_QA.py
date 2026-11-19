@@ -93,6 +93,10 @@ if ans is not None:
                     st.code(q, language=None)
     else:
         st.success(ans.answer)
+        if ans.unverified_numbers:
+            st.warning("**확인 필요** — 답변의 숫자 " + ", ".join(f"`{n}`" for n in ans.unverified_numbers)
+                       + "은(는) 아래 근거 원문에서 찾지 못했습니다. 모델이 계산·변환했거나 근거 밖의 내용일 수 있으니 "
+                         "원문으로 확인하세요.")
         groups: dict[int, list] = {}
         for c in ans.citations:  # one card per retrieved chunk; all its verified quotes in bold
             groups.setdefault(c.source, []).append(c)

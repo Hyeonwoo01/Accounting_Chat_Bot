@@ -3,8 +3,15 @@
 Flow: retrieve top-k chunks (optional firm / date filters) -> refuse WITHOUT calling the LLM if the
 best relevance is under the threshold -> ask the LLM to answer only from the numbered chunks and
 quote them verbatim -> keep only citations whose quote is found in the chunk text -> refuse if none
-survive. Every citation shows filing name, submission date, receipt number, filer and DART link,
-and for a client audit report the audited company (principle 8).
+survive -> flag numbers in the answer that the cited chunks do not contain. Every citation shows filing
+name, submission date, receipt number, filer and DART link, and for a client audit report the audited
+company (principle 8).
+
+A verified quote proves the cited text exists, not that the whole answer follows from it: the model can
+quote "매출액 1,000억 원" and add "전년 대비 30% 성장". Numbers are where that does the most harm and the
+only part a string check can catch, so every number in the answer must appear in the cited chunks (their
+text and filing metadata) or in the question; others are listed in `Answer.unverified_numbers` and the
+dashboard shows them as unconfirmed. Claims without numbers are not checked.
 """
 
 from __future__ import annotations
@@ -68,6 +75,7 @@ class Answer:
     replaced_company_id: str | None = None  # firm the caller selected but the question named another one
     typo_fixed: tuple[str, str] | None = None  # (as typed, read as) when a firm name typo was corrected
     rejected_quotes: list[str] = field(default_factory=list)  # model quotes that failed verification (diagnosis)
+    unverified_numbers: list[str] = field(default_factory=list)  # numbers in the answer not found in cited chunks
 
 
 _HANGUL = re.compile(r"[가-힣]")
@@ -222,14 +230,68 @@ def build_messages(question: str, docs: list[tuple[str, dict]]) -> list[dict[str
             {"role": "user", "content": f"질문: {question}\n\n" + "\n\n".join(blocks)}]
 
 
+_FORMAT_ERROR = {"refuse": True, "reason": "응답 형식 오류"}
+
+
 def _parse(text: str) -> dict:
+    """The model's JSON object, or a refusal when the text holds no object or the answer is not a string."""
     m = re.search(r"\{.*\}", text or "", re.S)
     if not m:
-        return {"refuse": True, "reason": "응답 형식 오류"}
+        return _FORMAT_ERROR
     try:
-        return json.loads(m.group(0))
+        out = json.loads(m.group(0))
     except json.JSONDecodeError:
-        return {"refuse": True, "reason": "응답 형식 오류"}
+        return _FORMAT_ERROR
+    if not isinstance(out, dict) or not isinstance(out.get("answer", ""), str):
+        return _FORMAT_ERROR
+    if not isinstance(out.get("citations") or [], list):
+        out["citations"] = []
+    return out
+
+
+# 3,018 / 33.03 / 2026.06 / 568,631,972,532 — commas are dropped before comparing.
+_NUMBER = re.compile(r"\d[\d,]*(?:\.\d+)*")
+
+
+def _numbers(text: str) -> set[str]:
+    return {n.replace(",", "").rstrip(".") for n in _NUMBER.findall(text or "")}
+
+
+_DATE = re.compile(r"(\d{4})-(\d{2})-(\d{2})")
+
+
+def metadata_numbers(md: dict[str, Any]) -> set[str]:
+    """Numbers an answer may take from a citation's filing data (receipt no., submission date, report name).
+
+    A date gives its year, year.month and the whole date, not the bare day or month: "2026-06-30" must not
+    make an unrelated "30" in the answer look supported.
+    """
+    out: set[str] = set()
+    for v in md.values():
+        text = str(v)
+        for y, m, d in _DATE.findall(text):
+            out |= {y, f"{y}.{m}", f"{y}{m}{d}"}
+        out |= {n for n in _numbers(_DATE.sub(" ", text)) if len(n.replace(".", "")) >= 3}
+    return out
+
+
+def unsupported_numbers(answer: str, evidence: list[str], known_extra: set[str] = frozenset()) -> list[str]:
+    """Numbers (2+ digits) in the answer found in none of the evidence texts or `known_extra`, in answer order.
+
+    A dotted number also passes when each part is present in the evidence (answer "2025.03" vs a chunk's
+    "(2025.03)" context line is a direct match; "3.5" vs a table "3 5" passes by parts).
+    Single digits are skipped: counts such as "4개 법인" come from reading, not from a table cell.
+    """
+    known = set(known_extra).union(*(_numbers(t) for t in evidence)) if evidence else set(known_extra)
+    out: list[str] = []
+    for raw in _NUMBER.findall(answer or ""):
+        n = raw.replace(",", "").rstrip(".")
+        if len(n.replace(".", "")) < 2 or n in known or raw in out:
+            continue
+        if "." in n and all(part in known for part in n.split(".")):
+            continue
+        out.append(raw.rstrip("."))
+    return out
 
 
 def _date_key(d: str | None) -> int | None:
@@ -338,11 +400,14 @@ class RagPipeline:
                           reason=f"검색 유사도 {top if top is None else round(top, 3)} < 기준 {self.min_relevance}")
         docs = [(t, md) for t, md, _ in hits]
         out = _parse(self.chat(build_messages(query, docs)))
-        if out.get("refuse") or not out.get("answer"):
+        if out.get("refuse") or not str(out.get("answer") or "").strip():
             return Answer(question, REFUSAL, refused=True, top_score=top, retrieved=len(hits), auto_company_id=auto, replaced_company_id=replaced, typo_fixed=typo,
                           reason=out.get("reason") or "모델이 거절")
         verified, rejected = [], []
         for c in out.get("citations") or []:
+            if not isinstance(c, dict):
+                rejected.append(f"(형식 오류) {c}"[:160])
+                continue
             quote = str(c.get("quote", ""))
             try:
                 n = int(c.get("source"))
@@ -359,8 +424,13 @@ class RagPipeline:
             return Answer(question, REFUSAL, refused=True, top_score=top, retrieved=len(hits), auto_company_id=auto, replaced_company_id=replaced, typo_fixed=typo,
                           rejected_quotes=rejected[:5],
                           reason=f"인용 구절을 원문에서 확인하지 못함 (인용 {len(rejected)}개 모두 불일치)")
-        return Answer(question, out["answer"].strip(), verified, top_score=top, retrieved=len(hits),
-                      auto_company_id=auto, replaced_company_id=replaced, typo_fixed=typo)
+        text = out["answer"].strip()
+        cited = {c.source: c for c in verified}
+        evidence = [question] + [c.chunk_text for c in cited.values()]
+        from_metadata = set().union(*(metadata_numbers(c.metadata) for c in cited.values()))
+        return Answer(question, text, verified, top_score=top, retrieved=len(hits),
+                      auto_company_id=auto, replaced_company_id=replaced, typo_fixed=typo,
+                      unverified_numbers=unsupported_numbers(text, evidence, from_metadata))
 
 
 def format_citation(i: int, c: Citation) -> str:

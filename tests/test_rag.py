@@ -415,3 +415,48 @@ def test_ask_uses_corrected_name_and_reports_it():
     assert a.typo_fixed == ("삼이회계법인", "삼일회계법인")
     assert (a.auto_company_id, a.replaced_company_id) == ("pwc", "kpmg")
     assert seen[-1] == "삼일회계법인 공인회계사 수" and a.question == "삼이회계법인 공인회계사 수"
+
+
+def test_unsupported_numbers_flags_only_numbers_missing_from_evidence():
+    from src.rag.rag_pipeline import unsupported_numbers
+
+    from src.rag.rag_pipeline import metadata_numbers
+
+    ev = ["공인회계사 수는 3,018명이다. 회계감사 33.03%", "표 합계 791 768"]
+    meta = metadata_numbers({"rcept_dt": "2026-06-30", "rcept_no": "20260630000123", "report_nm": "회계법인사업보고서 (2026.06)"})
+    assert {"2026", "2026.06", "20260630", "20260630000123"} <= meta and "30" not in meta and "06" not in meta
+    assert unsupported_numbers("3,018명이고 회계감사 비중은 33.03%입니다.", ev, meta) == []
+    assert unsupported_numbers("2026.06 보고서 기준 합계는 791개입니다.", ev, meta) == []  # filing date + table cell
+    assert unsupported_numbers("3,018명이며 전년 대비 30% 늘었습니다. 30%는 큰 폭입니다.", ev, meta) == ["30"]
+    assert unsupported_numbers("4개 법인 중 1곳입니다.", ev) == []                     # single digits skipped
+    assert unsupported_numbers("약 5,686억 원입니다.", []) == ["5,686"]
+
+
+def test_answer_numbers_not_in_cited_chunk_are_flagged():
+    hits = hits_from(own_doc())
+    n = next(i for i, (t, *_) in enumerate(hits, 1) if "2,500명" in t)
+    cite = [{"source": n, "quote": "공인회계사 수는  2,500명이다."}]
+    ok = RagPipeline(FakeStore(hits), chat_returning({"answer": "2,500명입니다.", "citations": cite})).ask("공인회계사 수는?")
+    assert not ok.refused and ok.unverified_numbers == []
+    bad = RagPipeline(FakeStore(hits), chat_returning(
+        {"answer": "2,500명으로 전년보다 120명 늘었습니다.", "citations": cite})).ask("공인회계사 수는?")
+    assert not bad.refused and bad.unverified_numbers == ["120"]
+    asked = RagPipeline(FakeStore(hits), chat_returning(
+        {"answer": "2025년 기준 2,500명입니다.", "citations": cite})).ask("2025년 공인회계사 수는?")
+    assert asked.unverified_numbers == []                                               # number from the question
+
+
+def test_malformed_model_output_refuses_instead_of_crashing():
+    hits = hits_from(own_doc())
+    n = next(i for i, (t, *_) in enumerate(hits, 1) if "2,500명" in t)
+    good = {"source": n, "quote": "공인회계사 수는  2,500명이다."}
+    for payload in ('["not", "an", "object"]',
+                    {"answer": ["목록"], "citations": [good]},
+                    {"answer": 2500, "citations": [good]},
+                    {"answer": "   ", "citations": [good]},
+                    {"answer": "답", "citations": "문자열"},
+                    {"answer": "답", "citations": ["문자열", 3]}):
+        a = RagPipeline(FakeStore(hits), chat_returning(payload)).ask("q")
+        assert a.refused and a.answer == REFUSAL
+    mixed = RagPipeline(FakeStore(hits), chat_returning({"answer": "2,500명입니다.", "citations": ["x", good]})).ask("q")
+    assert not mixed.refused and len(mixed.citations) == 1                              # bad item skipped, not fatal
